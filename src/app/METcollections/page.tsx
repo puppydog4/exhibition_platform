@@ -1,49 +1,171 @@
-'use client'
-import fetchArtWorks from "@/utils/fetchArtworks"
-import { ButtonProps, ToggleButton } from "@mui/material"
-import { Box, Button, ButtonGroup } from "@mui/material"
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+"use client";
+import fetchArtWorks from "@/utils/fetchArtworks";
+import {
+  alpha,
+  ButtonProps,
+  InputBase,
+  Link,
+  styled,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import { Box, Button, ButtonGroup } from "@mui/material";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useState } from "react";
+import{ useRouter } from "next/navigation";
 
+const Search = styled("div")(({ theme }) => ({
+  position: "relative",
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginLeft: 0,
+  width: "100%",
+  [theme.breakpoints.up("sm")]: {
+    marginLeft: theme.spacing(1),
+    width: "auto",
+  },
+}));
 
-const queryClient = new QueryClient()
+const SearchIconWrapper = styled("div")(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: "100%",
+  position: "absolute",
+  pointerEvents: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: "inherit",
+  width: "100%",
+  "& .MuiInputBase-input": {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create("width"),
+    [theme.breakpoints.up("sm")]: {
+      width: "12ch",
+      "&:focus": {
+        width: "20ch",
+      },
+    },
+  },
+}));
+
+const queryClient = new QueryClient();
 
 export default function App() {
   return (
     // Provide the client to your App
     <QueryClientProvider client={queryClient}>
-      <Artworks />
+      <SearchCollection/>
     </QueryClientProvider>
-  )
+  );
 }
 
+function SearchCollection() {
+  const router = useRouter()
+  const { isLoading, isError, data, error } = useQuery({
+    queryKey: [
+      "https://collectionapi.metmuseum.org/public/collection/v1/departments",
+    ],
+    queryFn: fetchArtWorks,
+  });
 
+  const [department, setDepartment] = useState<string | null>("");
 
-function Artworks() {
+  const handleDepartment = (
+    event: React.MouseEvent<HTMLElement>,
+    newDepartment: string | null
+  ) => {
+    setDepartment(newDepartment);
+  };
 
-  const {isLoading , isError , data , error} = useQuery({ queryKey: ['https://collectionapi.metmuseum.org/public/collection/v1/departments' , "1"], queryFn: fetchArtWorks })
+  const handleSearch = () => {
+    if (department) {
+      // Redirect to the search page with query parameters
+      router.push(
+        `/search?query=${encodeURIComponent(
+          searchInput
+        )}&department=${encodeURIComponent(department)}`
+      );
+    } else {
+      console.log("No department selected");
+      // Optionally, display a message to the user here
+    }
+  };
+  const [searchInput, setSearchInput] = useState("");
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(event.target.value);
+  };
 
   if (isLoading) {
-    return <span>Loading...</span>
+    return <span>Loading...</span>;
   }
 
   if (isError) {
-    return <span>Error: {error.message}</span>
+    return <span>Error: {error.message}</span>;
   }
 
   return (
-  <Box >
-    <Button href="/">Home</Button>
-    <ButtonGroup sx = {{display: 'flex',
-    flexDirection : "row", 
-    flexWrap: 'wrap',
-    p: 1,
-    m: 1,
-    bgcolor: 'background.paper',
-    maxWidth: 3000,
-    borderRadius: 1,}}>{data.departments.map((department : {displayName : string , departmentId : number}) => {return  <ToggleButton key={department.departmentId} value={department.displayName}  sx={{m: 1 , p : 1}}>{department.displayName}</ToggleButton>})}</ButtonGroup>
-  </Box>
-  )
+    <>
+      <Box>
+        <Button href="/">Home</Button>
+        <Search>
+          <SearchIconWrapper>
+            <SearchIcon />
+          </SearchIconWrapper>
+          <StyledInputBase
+            placeholder="Search…"
+            inputProps={{ "aria-label": "search" }}
+            value={searchInput}
+            onChange={handleInputChange}
+          />
+        </Search>
+        <ToggleButtonGroup
+          value={department}
+          exclusive
+          onChange={handleDepartment}
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            p: 1,
+            m: 1,
+            bgcolor: "background.paper",
+            maxWidth: 3000,
+            borderRadius: 1,
+          }}
+        >
+          {data.departments.map(
+            (department: { displayName: string; departmentId: number }) => {
+              return (
+                <ToggleButton
+                  key={department.departmentId}
+                  value={department.departmentId}
+                  sx={{ m: 1, p: 1 }}
+                >
+                  {department.displayName}
+                </ToggleButton>
+              );
+            }
+          )}
+        </ToggleButtonGroup>
+      </Box>
+      <Box>
+        <Button variant="contained" onClick={handleSearch}>Search</Button>
+      </Box>
+    </>
+  );
 }
-
-
