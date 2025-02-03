@@ -1,10 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box, CircularProgress, Typography, List, ListItem, Button, Card, CardMedia, CardContent } from "@mui/material";
 import fetchSearchResults from "@/utils/fetchSearchResultsMet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import fetchArtworkDetail from "@/utils/fetchArtworkDetailsMet";
 
 const queryClient = new QueryClient();
@@ -18,8 +18,7 @@ export default function App() {
     );
   }
 
-
-  function SearchResultsPage() {
+function SearchResultsPage() {
     // Extract search parameters from the URL
     const searchParams = useSearchParams();
     const searchTerm = searchParams.get("query") || "";
@@ -48,6 +47,9 @@ export default function App() {
     const objectIDs: number[] = searchData?.objectIDs || [];
     const currentObjectID = objectIDs.length ? objectIDs[currentIndex] : null;
   
+    // Access the query client for prefetching
+    const queryClient = useQueryClient();
+  
     // Fetch details for the current artwork
     const {
       data: artworkData,
@@ -57,7 +59,32 @@ export default function App() {
       queryKey: ["artwork", currentObjectID],
       queryFn: () => fetchArtworkDetail(currentObjectID as number),
       enabled: Boolean(currentObjectID),
+      staleTime: 1000 * 60 * 5, 
     });
+  
+    // Prefetch the previous and next artwork details whenever currentIndex changes
+    useEffect(() => {
+        if (objectIDs.length > 0) {
+            for (let i = 1; i <= 3; i++) {
+                if (currentIndex + i < objectIDs.length) {
+                    const nextId = objectIDs[currentIndex + i];
+                    queryClient.prefetchQuery({
+                        queryKey: ["artwork", nextId],
+                        queryFn: () => fetchArtworkDetail(nextId),
+                    });
+                }
+            }
+            for (let i = 1; i <= 3; i++) {
+                if (currentIndex - i >= 0) {
+                    const prevId = objectIDs[currentIndex - i];
+                    queryClient.prefetchQuery({
+                        queryKey: ["artwork", prevId],
+                        queryFn: () => fetchArtworkDetail(prevId),
+                    });
+                }
+            }
+        }
+    }, [currentIndex, objectIDs, queryClient]);
   
     // --- Loading and Error States for Search ---
     if (searchLoading) {
@@ -76,13 +103,12 @@ export default function App() {
       );
     }
   
-    // --- Render the search results with pagination ---
     return (
       <Box sx={{ p: 2 }}>
-        <Button href="/METcollections">Return to Search</Button>
         <Typography variant="h4" gutterBottom>
           Search Results
         </Typography>
+        <Button href="/METcollections">Return to Search</Button>
         <Typography variant="body1" gutterBottom>
           Total Artworks Found: {searchData.total}
         </Typography>
@@ -98,14 +124,12 @@ export default function App() {
             </Typography>
           ) : artworkData ? (
             <Card sx={{ maxWidth: 600, margin: "auto" }}>
-              {artworkData.primaryImage && (
-                <CardMedia
-                  component="img"
-                  height="400"
-                  image={artworkData.primaryImage}
-                  alt={artworkData.title}
-                /> 
-              )} 
+              <CardMedia
+                component="img"
+                height="400"
+                image={artworkData.primaryImageSmall || "/placeholder-image.png"}
+                alt={artworkData.title}
+              />
               <CardContent>
                 <Typography variant="h6">{artworkData.title}</Typography>
                 <Typography variant="body2">
@@ -122,7 +146,13 @@ export default function App() {
         </Box>
   
         {/* Pagination Controls */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Button
             variant="contained"
             disabled={currentIndex === 0}
