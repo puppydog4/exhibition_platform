@@ -1,9 +1,16 @@
-import axios from "axios";
 
-export default async function fetchArtWorks(url : string){
-    let response = await axios.get(url)
-    console.log(response.data.objectIDs)
-    return response.data.total
-}
+export default async function fetchArtWorks({ queryKey }: { queryKey: string[] }): Promise<any> {
+
+    const response = await fetch(queryKey[0]);
+  
+    if (!response.ok) {
+  
+      throw new Error('Network response was not ok');
+  
+    }
+    let data = await response.json()
+    return data
+  
+  }
 
 
