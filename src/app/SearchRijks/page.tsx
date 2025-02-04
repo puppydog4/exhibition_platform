@@ -40,7 +40,7 @@ const SearchResultsPage: React.FC = () => {
     queryKey: [
       `https://www.rijksmuseum.nl/api/en/collection?key=`,
       `&q=${encodeURIComponent(query)}`,
-      `&ps=100`, 
+      `&ps=100&imgonly=True&s=relevance`,
     ],
     queryFn: fetchRijiksArtWorks,
   });
@@ -72,7 +72,7 @@ const SearchResultsPage: React.FC = () => {
 
       {/* Display the current item */}
       <Card sx={{ maxWidth: 600, margin: "auto" }}>
-        <CardMedia component="img" image={data[currentIndex].headerImage.url} />
+        <CardMedia component="img" image={data[currentIndex].webImage.url} />
         <CardContent>
           <Typography variant="body1">{data[currentIndex].longTitle}</Typography>
         </CardContent>
