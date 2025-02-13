@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box, CircularProgress, Typography, List, ListItem, Button, Card, CardMedia, CardContent } from "@mui/material";
 import fetchSearchResults from "@/utils/fetchSearchResultsMet";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import fetchArtworkDetail from "@/utils/fetchArtworkDetailsMet";
 
 const queryClient = new QueryClient();
@@ -44,7 +44,7 @@ function SearchResultsPage() {
     const [currentIndex, setCurrentIndex] = useState(0);
   
     // Get the list of objectIDs from the search response
-    const objectIDs: number[] = searchData?.objectIDs || [];
+    const objectIDs: number[] = useMemo(() => searchData?.objectIDs || [], [searchData]);
     const currentObjectID = objectIDs.length ? objectIDs[currentIndex] : null;
   
     // Access the query client for prefetching
@@ -62,7 +62,7 @@ function SearchResultsPage() {
       staleTime: 1000 * 60 * 5, 
     });
   
-    // Prefetch the previous and next artwork details whenever currentIndex changes
+    // Prefetch the 3 previous and next artwork details whenever currentIndex changes
     useEffect(() => {
         if (objectIDs.length > 0) {
             for (let i = 1; i <= 3; i++) {
