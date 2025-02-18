@@ -100,7 +100,7 @@ const SearchResultsPage: React.FC = () => {
           },
         }}
       >
-        <DialogContent className="relative p-0">
+        <DialogContent className="relative p-0" sx={{ color: "white" }}>
           <IconButton
             onClick={() => setOpen(false)}
             sx={{
@@ -115,7 +115,7 @@ const SearchResultsPage: React.FC = () => {
           </IconButton>
           {/* Full Image */}
           <img
-            src={data[currentIndex].webImage.url}
+            src={data[currentIndex]?.webImage.url}
             alt="Expanded View"
             className="w-full h-auto"
             style={{
@@ -124,6 +124,14 @@ const SearchResultsPage: React.FC = () => {
               objectFit: "contain", // Ensures full image fits while maintaining aspect ratio
             }}
           />
+          <Box sx={{ p: 2, color: "white" }}>
+            <Typography variant="h6">
+              {data[currentIndex]?.longTitle}
+            </Typography>
+            <Typography variant="body2">
+              {data[currentIndex].objectDate}
+            </Typography>
+          </Box>
         </DialogContent>
         <Pagination
           totalItems={data.length}

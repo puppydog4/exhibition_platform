@@ -172,7 +172,7 @@ function SearchResultsPage() {
           },
         }}
       >
-        <DialogContent className="relative p-0">
+        <DialogContent className="relative p-0" sx={{ color: "white" }}>
           <IconButton
             onClick={() => setOpen(false)}
             sx={{
@@ -187,7 +187,7 @@ function SearchResultsPage() {
           </IconButton>
           {/* Full Image */}
           <img
-            src={artworkData?.primaryImage || "/placeholder-image.png"}
+            src={artworkData?.primaryImage}
             alt="Expanded View"
             className="w-full h-auto"
             style={{
@@ -196,6 +196,13 @@ function SearchResultsPage() {
               objectFit: "contain", // Ensures full image fits while maintaining aspect ratio
             }}
           />
+          <Box sx={{ p: 2, color: "white" }}>
+            <Typography variant="h6">{artworkData?.title}</Typography>
+            <Typography variant="body2">
+              {artworkData?.artistDisplayName}
+            </Typography>
+            <Typography variant="body2">{artworkData?.objectDate}</Typography>
+          </Box>
         </DialogContent>
         <MetPagination
           currentIndex={currentIndex}
