@@ -76,7 +76,6 @@ function SearchCollection() {
   return (
     <>
       <Box>
-        <Button href="/">Home</Button>
         <Search>
           <SearchIconWrapper>
             <SearchIcon />

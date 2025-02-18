@@ -27,7 +27,7 @@ const Navbar = () => {
           ) : (
             <>
             <Button color="inherit" component={Link} href="/userDashboard">
-              Dashboard
+              Your Collections
             </Button>
             <Button color="inherit" onClick={signOut}>
             Log Out
