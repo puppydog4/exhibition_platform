@@ -23,6 +23,8 @@ import {
 } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import fetchRijiksArtWorks from "@/utils/fetchRIjksArtworks";
+import FavoriteButton from "../components/RijksFavouriteButton";
+import RijksFavoriteButton from "../components/RijksFavouriteButton";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +90,7 @@ const SearchResultsPage: React.FC = () => {
         currentIndex={currentIndex}
         onPageChange={setCurrentIndex}
       />
+      <FavoriteButton artwork={data[currentIndex]}></FavoriteButton>
       <Dialog
         open={open}
         fullScreen
@@ -138,6 +141,7 @@ const SearchResultsPage: React.FC = () => {
           currentIndex={currentIndex}
           onPageChange={setCurrentIndex}
         />
+        <RijksFavoriteButton artwork={data[currentIndex]} />
       </Dialog>
     </Box>
   );
