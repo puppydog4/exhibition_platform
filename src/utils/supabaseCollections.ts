@@ -99,3 +99,17 @@ export const addArtworkToExhibition = async (
 
   return data as ExhibitionArtwork;
 };
+
+export const getExhibitionArtworks = async (
+  exhibitionId: string
+): Promise<ExhibitionArtwork[]> => {
+  const { data, error } = await supabase
+    .from("exhibition_artworks")
+    .select("*")
+    .eq("exhibition_id", exhibitionId);
+
+  if (error) {
+    throw new Error(`Error fetching artworks: ${error.message}`);
+  }
+  return data as ExhibitionArtwork[];
+};

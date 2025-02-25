@@ -24,6 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import fetchSearchResults from "@/utils/fetchSearchResultsMet";
 import { useEffect, useMemo, useState } from "react";
 import fetchArtworkDetail from "@/utils/fetchArtworkDetailsMet";
+import MetFavoriteButton from "../components/MetFavouriteButton";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +43,7 @@ function SearchResultsPage() {
   const searchTerm = searchParams.get("query") || "";
   const departmentId = searchParams.get("department") || "";
 
-  const searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?departmentId=${encodeURIComponent(
+  const searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${encodeURIComponent(
     departmentId
   )}&q=${encodeURIComponent(searchTerm)}`;
 
@@ -140,13 +141,30 @@ function SearchResultsPage() {
           </Typography>
         ) : artworkData ? (
           <Card sx={{ maxWidth: 600, margin: "auto" }}>
-            <CardMedia
-              component="img"
-              height="400"
-              image={artworkData.primaryImage || "/placeholder-image.png"}
-              alt={artworkData.title}
-              onClick={() => setOpen(true)}
-            />
+            {artworkData.primaryImage ? (
+              <CardMedia
+                component="img"
+                height="400"
+                image={artworkData.primaryImage}
+                alt={artworkData.title}
+                onClick={() => setOpen(true)}
+                sx={{ cursor: "pointer" }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  height: 400,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#f0f0f0",
+                }}
+              >
+                <Typography variant="h6" color="text.secondary">
+                  Image not available from MET
+                </Typography>
+              </Box>
+            )}
             <CardContent>
               <Typography variant="h6">{artworkData.title}</Typography>
               <Typography variant="body2">
@@ -217,6 +235,7 @@ function SearchResultsPage() {
         setCurrentIndex={setCurrentIndex}
         objectIDs={objectIDs}
       />
+      <MetFavoriteButton artwork={artworkData} collection={departmentId} />
     </Box>
   );
 }

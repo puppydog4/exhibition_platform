@@ -84,7 +84,7 @@ const CollectionsPage = () => {
                 <Typography variant="body2" color="text.secondary">
                   {collection.description}
                 </Typography>
-                <Button>View</Button>
+                <Button href={`userDashboard/${collection.id}`}>View</Button>
                 <Button
                   onClick={() => {
                     deleteCollection(collection.id);

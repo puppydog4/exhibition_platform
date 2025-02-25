@@ -21,9 +21,13 @@ import {
 
 interface FavoriteButtonProps {
   artwork: any;
+  collection: any;
 }
 
-export default function RijksFavoriteButton({ artwork }: FavoriteButtonProps) {
+export default function MetFavoriteButton({
+  artwork,
+  collection,
+}: FavoriteButtonProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [collections, setCollections] = useState<any[]>([]);
@@ -56,16 +60,15 @@ export default function RijksFavoriteButton({ artwork }: FavoriteButtonProps) {
     setInserting(true);
     try {
       await addArtworkToExhibition(selectedCollection, {
-        artwork_id: artwork.id,
-        title: artwork.longTitle,
-        artist: "",
-        image_url: artwork.webImage.url || "",
-        museum: "Rijks",
+        artwork_id: artwork.objectID,
+        title: artwork.title,
+        artist: artwork.artistDisplayName,
+        image_url: artwork.primaryImage || "",
+        museum: "MET",
         api_url:
-          `https://www.rijksmuseum.nl/api/${artwork.language}/${artwork.objectNumber}` ||
+          `https://collectionapi.metmuseum.org/public/collection/v1/objects/${artwork.objectID}` ||
           "",
       });
-      // Optionally, show success feedback (e.g., toast notification)
       setOpen(false);
     } catch (err) {
       console.error("Error adding artwork", err);
