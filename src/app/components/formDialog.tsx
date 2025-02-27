@@ -18,8 +18,8 @@ export default function FormDialog() {
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [_collections, setCollections] = React.useState<any[]>([]);
-  const [_error, setError] = React.useState("");
+  const [, setCollections] = React.useState<any[]>([]);
+  const [, setError] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [hasFetched, setHasFetched] = React.useState(false);
   const { user } = useAuth();
