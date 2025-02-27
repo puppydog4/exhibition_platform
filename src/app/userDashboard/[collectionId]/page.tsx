@@ -24,21 +24,10 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import {
+  ExhibitionArtwork,
   getExhibitionArtworks,
   removeArtworkFromExhibition,
 } from "../../../utils/supabaseCollections"; // Adjust the import path as needed
-
-// Define the ExhibitionArtwork type
-type ExhibitionArtwork = {
-  id: string;
-  exhibition_id: string;
-  artwork_id: string;
-  title: string;
-  artist: string;
-  image_url: string;
-  museum: string;
-  api_url: string;
-};
 
 const queryClient = new QueryClient();
 
@@ -51,29 +40,59 @@ export default function App() {
 }
 
 function ViewCollectionPage() {
-  const { collectionId } = useParams<{ collectionId: string }>();
+  const { collectionId } = useParams<{ collectionId?: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Fetch artworks from Supabase for this collection
   const {
-    data: artworks,
+    data: artworks = [],
     isLoading,
     error,
   } = useQuery<ExhibitionArtwork[]>({
     queryKey: ["collectionArtworks", collectionId],
-    queryFn: () => getExhibitionArtworks(collectionId!),
-    enabled: !!collectionId,
+    queryFn: async () => {
+      if (!collectionId) throw new Error("Invalid collection ID.");
+      return getExhibitionArtworks(collectionId);
+    },
+    enabled: Boolean(collectionId),
   });
 
-  const totalArtworks = artworks?.length || 0;
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
-  const currentArtwork =
-    artworks && artworks.length ? artworks[currentIndex] : null;
+  const totalArtworks = artworks.length;
+  const currentArtwork = artworks[currentIndex] ?? null;
 
-  // Remove Artwork from Collection
+  // Prefetch adjacent artworks
+  useEffect(() => {
+    if (!artworks.length) return;
+
+    [1, 2, 3].forEach((offset) => {
+      const nextIndex = currentIndex + offset;
+      const prevIndex = currentIndex - offset;
+
+      if (nextIndex < totalArtworks) {
+        queryClient.prefetchQuery({
+          queryKey: ["collectionArtworks", collectionId, nextIndex],
+          queryFn: () => Promise.resolve(artworks[nextIndex]),
+        });
+      }
+
+      if (prevIndex >= 0) {
+        queryClient.prefetchQuery({
+          queryKey: ["collectionArtworks", collectionId, prevIndex],
+          queryFn: () => Promise.resolve(artworks[prevIndex]),
+        });
+      }
+    });
+  }, [currentIndex, artworks, collectionId, queryClient, totalArtworks]);
+
+  // Handle navigation
+  const goToNext = () =>
+    setCurrentIndex((prev) => Math.min(prev + 1, totalArtworks - 1));
+  const goToPrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
+
+  // Remove Artwork Mutation
   const removeArtworkMutation = useMutation({
     mutationFn: (artworkId: string) =>
       removeArtworkFromExhibition(artworkId, collectionId!),
@@ -81,35 +100,15 @@ function ViewCollectionPage() {
       queryClient.invalidateQueries({
         queryKey: ["collectionArtworks", collectionId],
       });
+      setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0)); // Adjust index if needed
     },
   });
 
   const handleRemoveArtwork = () => {
     if (currentArtwork) {
       removeArtworkMutation.mutate(currentArtwork.artwork_id);
-      setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
     }
   };
-
-  // Prefetch a few adjacent artworks
-  useEffect(() => {
-    if (artworks && artworks.length > 0) {
-      for (let i = 1; i <= 3; i++) {
-        if (currentIndex + i < artworks.length) {
-          queryClient.prefetchQuery({
-            queryKey: ["collectionArtworks", collectionId, currentIndex + i],
-            queryFn: () => Promise.resolve(artworks[currentIndex + i]),
-          });
-        }
-        if (currentIndex - i >= 0) {
-          queryClient.prefetchQuery({
-            queryKey: ["collectionArtworks", collectionId, currentIndex - i],
-            queryFn: () => Promise.resolve(artworks[currentIndex - i]),
-          });
-        }
-      }
-    }
-  }, [currentIndex, artworks, collectionId, queryClient]);
 
   if (isLoading) {
     return (
@@ -170,17 +169,18 @@ function ViewCollectionPage() {
               {currentArtwork.title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {currentArtwork.artist}
+              {currentArtwork.artist || "Unknown Artist"}
             </Typography>
           </CardContent>
+
           <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
             <Button
               variant="contained"
               color="error"
               onClick={handleRemoveArtwork}
-              disabled={removeArtworkMutation.isLoading}
+              disabled={removeArtworkMutation.isPending}
             >
-              {removeArtworkMutation.isLoading
+              {removeArtworkMutation.isPending
                 ? "Removing..."
                 : "Remove from Collection"}
             </Button>
@@ -191,28 +191,24 @@ function ViewCollectionPage() {
       )}
 
       {/* Navigation */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
-        <Button
-          onClick={() =>
-            setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev))
-          }
-          disabled={currentIndex === 0}
-          variant="outlined"
-        >
-          Previous
-        </Button>
-        <Button
-          onClick={() =>
-            setCurrentIndex((prev) =>
-              prev < totalArtworks - 1 ? prev + 1 : prev
-            )
-          }
-          disabled={currentIndex >= totalArtworks - 1}
-          variant="contained"
-        >
-          Next
-        </Button>
-      </Box>
+      {totalArtworks > 1 && (
+        <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
+          <Button
+            onClick={goToPrev}
+            disabled={currentIndex === 0}
+            variant="outlined"
+          >
+            Previous
+          </Button>
+          <Button
+            onClick={goToNext}
+            disabled={currentIndex >= totalArtworks - 1}
+            variant="contained"
+          >
+            Next
+          </Button>
+        </Box>
+      )}
 
       {/* Full-Screen Image Modal */}
       <Dialog

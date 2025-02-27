@@ -44,7 +44,7 @@ function SearchCollection() {
 
   const [dateRange, setDateRange] = useState<[number, number]>([1000, 2024]);
   const [department, setDepartment] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("sunflowers");
   const [disableSlider, setDisableSlider] = useState(false);
 
   const handleDepartment = (
@@ -96,6 +96,7 @@ function SearchCollection() {
           inputProps={{ "aria-label": "search" }}
           value={searchInput}
           onChange={handleInputChange}
+          required
         />
       </Search>
 

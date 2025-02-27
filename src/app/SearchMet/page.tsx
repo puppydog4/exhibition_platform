@@ -71,6 +71,7 @@ function SearchResultsPage() {
 
   const objectIDs = useMemo(() => searchData?.objectIDs || [], [searchData]);
   const currentObjectID = objectIDs.length ? objectIDs[currentIndex] : null;
+  console.log(searchData);
 
   // Fetch Artwork Details
   const {
