@@ -15,7 +15,7 @@ An intuitive platform for curating, managing, and exploring exhibitions using da
 
 - **Frontend:** Next.js, React, TypeScript
 - **State Management:** React Context, React Query
-- **Backend & Database:** Supabase
+- **Backend & Database:** Supabase(postgreSQL)
 - **UI Components:** Material UI
 
 ## 📦 Installation
@@ -34,7 +34,7 @@ An intuitive platform for curating, managing, and exploring exhibitions using da
    ```sh
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   NEXT_PUBLIC_RIJKS_API_KEY = your rijks museum api key
+   NEXT_PUBLIC_RIJKS_API_KEY =your_rijks_museum_api_key
    ```
 4. **Run the development server:**
    ```sh
@@ -59,16 +59,6 @@ An intuitive platform for curating, managing, and exploring exhibitions using da
 
 - ✅ Basic authentication & collection management
 - ✅ Improved UI & search functionality
-- 🔜 Enhanced user profiles & sharing options
-- 🔜 AI-based artwork recommendations
-
-## 📜 License
-
-MIT License © 2024 Exhibition Curation Platform
-
-## 🤝 Contributing
-
-Pull requests are welcome! Open an issue for bug reports or feature requests.
 
 ## 🌟 Acknowledgments
 
