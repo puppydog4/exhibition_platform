@@ -6,7 +6,12 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { supabase } from "../utils/supabaseClient";
+import { createClient, Session } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 // User type
 type User = {
@@ -43,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for auth state changes
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event: any, session: { user: { id: any; email: string } }) => {
+      (_event: any, session: Session | null) => {
         setUser(
           session?.user
             ? { id: session.user.id, email: session.user.email! }
