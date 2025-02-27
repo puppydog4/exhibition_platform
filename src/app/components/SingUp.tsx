@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState } from "react";
 import { useAuth } from "../../context/authContext";
@@ -13,6 +13,7 @@ const SignUp = () => {
   const handleSignUp = async () => {
     try {
       await signUp(email, password);
+      window.location.href = "/";
       alert("Sign up successful! Check your email to verify your account.");
     } catch (err) {
       setError((err as Error).message);
@@ -21,8 +22,10 @@ const SignUp = () => {
 
   return (
     <Box sx={{ width: "300px", margin: "auto", mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Sign Up</Typography>
-      
+      <Typography variant="h5" gutterBottom>
+        Sign Up
+      </Typography>
+
       {error && <Alert severity="error">{error}</Alert>}
 
       <TextField
@@ -40,7 +43,7 @@ const SignUp = () => {
         margin="normal"
         onChange={(e) => setPassword(e.target.value)}
       />
-      
+
       <Button
         variant="contained"
         color="primary"
