@@ -5,7 +5,6 @@ import fetchArtWorks from "@/utils/fetchArtworks";
 import {
   ToggleButton,
   ToggleButtonGroup,
-  Slider,
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
@@ -59,10 +58,6 @@ function SearchCollection() {
     event: React.ChangeEvent<HTMLInputElement>
   ): void => {
     setSearchInput(event.target.value);
-  };
-
-  const handleDateRangeChange = (newValue: [number, number]): void => {
-    setDateRange(newValue);
   };
 
   const handleSearch = () => {

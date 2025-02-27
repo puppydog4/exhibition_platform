@@ -15,7 +15,7 @@ export default async function fetchRijiksArtWorks({
   if (!response.ok) {
     throw new Error("Network response was not ok");
   }
-  let data = await response.json();
+  const data = await response.json();
 
   return data.artObjects;
 }

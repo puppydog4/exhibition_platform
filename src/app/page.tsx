@@ -7,9 +7,6 @@ import {
   CardContent,
   CardMedia,
   Typography,
-  AppBar,
-  Toolbar,
-  Button,
 } from "@mui/material";
 import Link from "next/link";
 

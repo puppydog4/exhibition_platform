@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Button,
   Dialog,
@@ -18,9 +18,13 @@ import {
   getUserExhibitions,
   addArtworkToExhibition,
 } from "../../utils/supabaseCollections"; // Your function to fetch exhibitions
+import {
+  convertRijksToExhibitionArtwork,
+  RijksmuseumArtwork,
+} from "@/utils/convertArtworks";
 
 interface FavoriteButtonProps {
-  artwork: any;
+  artwork: RijksmuseumArtwork;
 }
 
 export default function RijksFavoriteButton({ artwork }: FavoriteButtonProps) {
@@ -55,17 +59,25 @@ export default function RijksFavoriteButton({ artwork }: FavoriteButtonProps) {
     if (!selectedCollection) return;
     setInserting(true);
     try {
-      await addArtworkToExhibition(selectedCollection, {
-        artwork_id: artwork.id,
-        user_id: user?.id,
-        title: artwork.longTitle,
-        artist: "",
-        image_url: artwork.webImage.url || "",
-        museum: "Rijks",
-        api_url:
-          `https://www.rijksmuseum.nl/api/${artwork.language}/${artwork.objectNumber}` ||
-          "",
-      });
+      if (user) {
+        await addArtworkToExhibition(
+          selectedCollection,
+          convertRijksToExhibitionArtwork(
+            {
+              objectNumber: String(artwork.objectNumber), // Convert number to string if necessary
+              longTitle: artwork.longTitle, // Rijksmuseum API uses 'longTitle'
+              principalOrFirstMaker:
+                artwork.principalOrFirstMaker || "Unknown Artist", // Rijksmuseum API uses 'principalOrFirstMaker'
+              webImage: artwork.webImage
+                ? { url: artwork.webImage.url }
+                : undefined, // Rijksmuseum API uses 'webImage.url'
+              language: "en",
+            },
+            selectedCollection
+          )
+        );
+      }
+
       // Optionally, show success feedback (e.g., toast notification)
       setOpen(false);
     } catch (err) {

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Slider,
-  Box,
-  Typography,
-  Checkbox,
-  FormControlLabel,
-} from "@mui/material";
+import { Slider, Box, Typography } from "@mui/material";
 
 const DateRangeSlider = ({
   dateRange,

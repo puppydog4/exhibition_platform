@@ -7,7 +7,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import AddIcon from "@mui/icons-material/Add";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import {
   createExhibition,
   getUserExhibitions,
@@ -18,8 +18,8 @@ export default function FormDialog() {
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [collections, setCollections] = React.useState<any[]>([]);
-  const [error, setError] = React.useState("");
+  const [_collections, setCollections] = React.useState<any[]>([]);
+  const [_error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [hasFetched, setHasFetched] = React.useState(false);
   const { user } = useAuth();

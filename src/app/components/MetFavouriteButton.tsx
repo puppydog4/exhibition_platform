@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Button,
   Dialog,
@@ -17,20 +17,22 @@ import { useAuth } from "../../context/authContext";
 import {
   getUserExhibitions,
   addArtworkToExhibition,
+  Exhibition,
 } from "../../utils/supabaseCollections"; // Your function to fetch exhibitions
+import {
+  convertMetToExhibitionArtwork,
+  MetMuseumArtwork,
+} from "@/utils/convertArtworks";
 
 interface FavoriteButtonProps {
-  artwork: any;
-  collection: any;
+  artwork: MetMuseumArtwork;
+  collection: string;
 }
 
-export default function MetFavoriteButton({
-  artwork,
-  collection,
-}: FavoriteButtonProps) {
+export default function MetFavoriteButton({ artwork }: FavoriteButtonProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [collections, setCollections] = useState<any[]>([]);
+  const [collections, setCollections] = useState<Exhibition[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [loadingCollections, setLoadingCollections] = useState(false);
   const [inserting, setInserting] = useState(false);
@@ -58,17 +60,23 @@ export default function MetFavoriteButton({
   const handleAddToCollection = async () => {
     if (!selectedCollection) return;
     setInserting(true);
+
     try {
-      await addArtworkToExhibition(selectedCollection, {
-        artwork_id: artwork.objectID,
-        title: artwork.title,
-        artist: artwork.artistDisplayName,
-        image_url: artwork.primaryImage || "",
-        museum: "MET",
-        api_url:
-          `https://collectionapi.metmuseum.org/public/collection/v1/objects/${artwork.objectID}` ||
-          "",
-      });
+      if (user) {
+        await addArtworkToExhibition(
+          selectedCollection,
+          convertMetToExhibitionArtwork(
+            {
+              objectID: artwork.objectID, // Convert number to string if necessary
+              title: artwork.title, // Rijksmuseum API uses 'longTitle'
+              artistDisplayName: artwork.artistDisplayName || "Unknown Artist", // Rijksmuseum API uses 'principalOrFirstMaker'
+              primaryImage: artwork.primaryImage,
+            },
+            selectedCollection
+          )
+        );
+      }
+
       setOpen(false);
     } catch (err) {
       console.error("Error adding artwork", err);
