@@ -1,10 +1,8 @@
-// pages/PageTemplate.tsx
 "use client";
 
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   Card,
   CardContent,
   CardMedia,
@@ -30,7 +28,6 @@ const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    // Provide the client to your App
     <QueryClientProvider client={queryClient}>
       <SearchResultsPage />
     </QueryClientProvider>
@@ -38,15 +35,19 @@ export default function App() {
 }
 
 const SearchResultsPage: React.FC = () => {
-  // State to track the current item index.
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const query = useSearchParams().get("query") || "";
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query") || "";
+  const century = searchParams.get("century") || "";
+  const sort = searchParams.get("sort") || "relevance";
 
   const { isLoading, isError, data, error } = useQuery({
     queryKey: [
       `https://www.rijksmuseum.nl/api/en/collection?key=`,
       `&q=${encodeURIComponent(query)}`,
-      `&ps=100&imgonly=True&s=relevance`,
+      `&ps=100&imgonly=true`,
+      `&s=${sort}`,
+      `&century=${century}`,
     ],
     queryFn: fetchRijiksArtWorks,
   });
@@ -55,55 +56,73 @@ const SearchResultsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-        <CircularProgress />
+      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+        <CircularProgress size={60} />
       </Box>
     );
   }
 
   if (isError) {
     return (
-      <Typography variant="h6" color="error" sx={{ p: 2 }}>
+      <Typography variant="h6" color="error" sx={{ p: 4, textAlign: "center" }}>
         {(error as Error).message}
       </Typography>
     );
   }
 
   return (
-    <Box sx={{ p: 2 }}>
-      {/* Display the current item */}
-      <Card sx={{ maxWidth: 600, margin: "auto" }}>
+    <Box
+      sx={{
+        p: 4,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 3,
+      }}
+    >
+      <Card
+        sx={{
+          maxWidth: 700,
+          borderRadius: 4,
+          boxShadow: 3,
+          overflow: "hidden",
+        }}
+      >
         <CardMedia
           component="img"
           image={data[currentIndex].headerImage.url}
+          sx={{
+            cursor: "pointer",
+            transition: "0.3s",
+            "&:hover": { opacity: 0.8 },
+          }}
           onClick={() => setOpen(true)}
         />
-        <CardContent>
-          <Typography variant="body1">
+        <CardContent sx={{ textAlign: "center" }}>
+          <Typography variant="h6" fontWeight={600}>
             {data[currentIndex].longTitle}
           </Typography>
         </CardContent>
       </Card>
-      {/* Render Pagination Controls */}
       <Pagination
         totalItems={data.length}
         currentIndex={currentIndex}
         onPageChange={setCurrentIndex}
       />
-      <FavoriteButton artwork={data[currentIndex]}></FavoriteButton>
+      <FavoriteButton artwork={data[currentIndex]} />
       <Dialog
         open={open}
         fullScreen
         sx={{
           "& .MuiDialog-paper": {
-            backgroundColor: "black", // Set background to black for full-screen effect
+            backgroundColor: "black",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           },
         }}
       >
-        <DialogContent className="relative p-0" sx={{ color: "white" }}>
+        <DialogContent sx={{ color: "white", textAlign: "center", p: 4 }}>
           <IconButton
             onClick={() => setOpen(false)}
             sx={{
@@ -116,22 +135,20 @@ const SearchResultsPage: React.FC = () => {
           >
             <CloseIcon />
           </IconButton>
-          {/* Full Image */}
           <img
             src={data[currentIndex]?.webImage.url}
             alt="Expanded View"
-            className="w-full h-auto"
             style={{
-              maxWidth: "100%",
-              maxHeight: "100vh",
-              objectFit: "contain", // Ensures full image fits while maintaining aspect ratio
+              maxWidth: "90%",
+              maxHeight: "85vh",
+              objectFit: "contain",
             }}
           />
-          <Box sx={{ p: 2, color: "white" }}>
-            <Typography variant="h6">
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" fontWeight={600}>
               {data[currentIndex]?.longTitle}
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" fontStyle="italic">
               {data[currentIndex].objectDate}
             </Typography>
           </Box>

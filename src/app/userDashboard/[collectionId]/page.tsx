@@ -6,6 +6,7 @@ import {
   QueryClient,
   QueryClientProvider,
   useQuery,
+  useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -14,15 +15,18 @@ import {
   Card,
   CardMedia,
   CardContent,
-  CardActions,
   Button,
   CircularProgress,
   Dialog,
   DialogContent,
   IconButton,
+  Container,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { getExhibitionArtworks } from "../../../utils/supabaseCollections"; // Adjust the import path as needed
+import {
+  getExhibitionArtworks,
+  removeArtworkFromExhibition,
+} from "../../../utils/supabaseCollections"; // Adjust the import path as needed
 
 // Define the ExhibitionArtwork type
 type ExhibitionArtwork = {
@@ -47,7 +51,6 @@ export default function App() {
 }
 
 function ViewCollectionPage() {
-  // Get collection id from route parameters
   const { collectionId } = useParams<{ collectionId: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -69,6 +72,24 @@ function ViewCollectionPage() {
 
   const currentArtwork =
     artworks && artworks.length ? artworks[currentIndex] : null;
+
+  // Remove Artwork from Collection
+  const removeArtworkMutation = useMutation({
+    mutationFn: (artworkId: string) =>
+      removeArtworkFromExhibition(artworkId, collectionId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["collectionArtworks", collectionId],
+      });
+    },
+  });
+
+  const handleRemoveArtwork = () => {
+    if (currentArtwork) {
+      removeArtworkMutation.mutate(currentArtwork.artwork_id);
+      setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
+    }
+  };
 
   // Prefetch a few adjacent artworks
   useEffect(() => {
@@ -93,7 +114,7 @@ function ViewCollectionPage() {
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
+        <CircularProgress size={50} />
       </Box>
     );
   }
@@ -109,44 +130,74 @@ function ViewCollectionPage() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="md" sx={{ pt: 4, pb: 6, textAlign: "center" }}>
+      <Typography variant="h4" fontWeight={600} gutterBottom>
         Collection Artworks
       </Typography>
-      <Button variant="outlined" onClick={() => router.push("/userDashboard")}>
+
+      <Button
+        variant="outlined"
+        sx={{ mb: 3 }}
+        onClick={() => router.push("/userDashboard")}
+      >
         Return to Collections
       </Button>
-      <Typography variant="body1" gutterBottom sx={{ mt: 2 }}>
-        Total Artworks Found: {totalArtworks}
+
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        <strong>Total Artworks:</strong> {totalArtworks}
       </Typography>
 
       {currentArtwork ? (
-        <Card sx={{ maxWidth: 600, margin: "auto", my: 3 }}>
+        <Card
+          sx={{
+            maxWidth: "100%",
+            mx: "auto",
+            boxShadow: 4,
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
+        >
           <CardMedia
             component="img"
             height="400"
             image={currentArtwork.image_url || "/placeholder-image.png"}
             alt={currentArtwork.title}
             onClick={() => setDialogOpen(true)}
-            sx={{ cursor: "pointer" }}
+            sx={{ cursor: "pointer", objectFit: "cover" }}
           />
           <CardContent>
-            <Typography variant="h6">{currentArtwork.title}</Typography>
+            <Typography variant="h6" fontWeight={600}>
+              {currentArtwork.title}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               {currentArtwork.artist}
             </Typography>
           </CardContent>
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleRemoveArtwork}
+              disabled={removeArtworkMutation.isLoading}
+            >
+              {removeArtworkMutation.isLoading
+                ? "Removing..."
+                : "Remove from Collection"}
+            </Button>
+          </Box>
         </Card>
       ) : (
-        <Typography>No artworks in this collection.</Typography>
+        <Typography sx={{ mt: 3 }}>No artworks in this collection.</Typography>
       )}
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", my: 2 }}>
+      {/* Navigation */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
         <Button
           onClick={() =>
             setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev))
           }
           disabled={currentIndex === 0}
+          variant="outlined"
         >
           Previous
         </Button>
@@ -157,12 +208,13 @@ function ViewCollectionPage() {
             )
           }
           disabled={currentIndex >= totalArtworks - 1}
+          variant="contained"
         >
           Next
         </Button>
       </Box>
 
-      {/* Full-Screen Dialog for Image */}
+      {/* Full-Screen Image Modal */}
       <Dialog
         open={dialogOpen}
         fullScreen
@@ -207,6 +259,6 @@ function ViewCollectionPage() {
           </Box>
         </DialogContent>
       </Dialog>
-    </Box>
+    </Container>
   );
 }

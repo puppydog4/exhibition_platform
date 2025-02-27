@@ -7,13 +7,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import AddIcon from "@mui/icons-material/Add";
-import {
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  Typography,
-} from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import {
   createExhibition,
   getUserExhibitions,
@@ -27,65 +21,64 @@ export default function FormDialog() {
   const [collections, setCollections] = React.useState<any[]>([]);
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(true);
+  const [hasFetched, setHasFetched] = React.useState(false);
   const { user } = useAuth();
 
-  const fetchCollections = async () => {
-    if (!user) return;
-    try {
-      const data = await getUserExhibitions(user.id);
-      setCollections(data);
-    } catch (err) {
-      setError("Failed to load collections.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  React.useEffect(() => {
+    const fetchCollections = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const data = await getUserExhibitions(user.id);
+        setCollections(data);
+      } catch {
+        setError("Failed to load collections.");
+      } finally {
+        setLoading(false);
+        setHasFetched(true);
+      }
+    };
+    fetchCollections();
+  }, [user]);
 
   const handleCreateCollection = async () => {
     if (!title.trim()) return;
     try {
       if (user) {
-        console.log(user.id);
         await createExhibition(user.id, title, description);
+        setTitle("");
+        setDescription("");
+        setLoading(true);
+        await getUserExhibitions(user.id);
       } else {
         setError("User is not authenticated.");
       }
-      setTitle("");
-      setDescription("");
-      setLoading(true);
-      await fetchCollections(); // Refresh collections
-    } catch (err) {
+    } catch {
       setError("Error creating collection.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   return (
     <React.Fragment>
       <Button
         variant="contained"
-        onClick={handleClickOpen}
+        onClick={() => setOpen(true)}
         startIcon={<AddIcon />}
-      ></Button>
+      >
+        New Collection
+      </Button>
       <Dialog
         open={open}
-        onClose={handleClose}
+        onClose={() => setOpen(false)}
         slotProps={{
           paper: {
             component: "form",
             onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
               event.preventDefault();
               handleCreateCollection();
-              handleClose();
+              setOpen(false);
             },
           },
         }}
@@ -93,29 +86,39 @@ export default function FormDialog() {
         <DialogTitle>Create Collection</DialogTitle>
         <DialogContent>
           <Box sx={{ mb: 4 }}>
-            <TextField
-              label="Title"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <TextField
-              label="Description"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              multiline
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+            {loading && !hasFetched ? (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                <CircularProgress size={40} />
+              </Box>
+            ) : (
+              <>
+                <TextField
+                  label="Title"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <TextField
+                  label="Description"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  multiline
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button type="submit">Create Collection</Button>
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button type="submit" disabled={loading}>
+            Create Collection
+          </Button>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

@@ -1,7 +1,5 @@
-// components/Pagination.tsx
 import React from "react";
 import { Box, Button, Typography } from "@mui/material";
-import FavoriteButton from "./RijksFavouriteButton";
 
 interface PaginationProps {
   totalItems: number;
@@ -14,41 +12,34 @@ export const Pagination: React.FC<PaginationProps> = ({
   currentIndex,
   onPageChange,
 }) => {
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      onPageChange(currentIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < totalItems - 1) {
-      onPageChange(currentIndex + 1);
-    }
-  };
-
   return (
     <Box
       sx={{
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "center",
         alignItems: "center",
-        mt: 2,
+        gap: 2,
+        mt: 3,
       }}
     >
       <Button
-        variant="contained"
+        variant="outlined"
+        color="primary"
         disabled={currentIndex === 0}
-        onClick={handlePrevious}
+        onClick={() => onPageChange(currentIndex - 1)}
+        sx={{ px: 3, py: 1 }}
       >
         Previous
       </Button>
-      <Typography>
+      <Typography variant="body1" fontWeight={600}>
         {currentIndex + 1} / {totalItems}
       </Typography>
       <Button
-        variant="contained"
+        variant="outlined"
+        color="primary"
         disabled={currentIndex === totalItems - 1}
-        onClick={handleNext}
+        onClick={() => onPageChange(currentIndex + 1)}
+        sx={{ px: 3, py: 1 }}
       >
         Next
       </Button>

@@ -57,6 +57,7 @@ export default function RijksFavoriteButton({ artwork }: FavoriteButtonProps) {
     try {
       await addArtworkToExhibition(selectedCollection, {
         artwork_id: artwork.id,
+        user_id: user?.id,
         title: artwork.longTitle,
         artist: "",
         image_url: artwork.webImage.url || "",

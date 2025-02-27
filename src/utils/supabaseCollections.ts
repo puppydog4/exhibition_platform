@@ -74,6 +74,7 @@ export const deleteUserExhibition = async (
 export type ExhibitionArtwork = {
   id: string;
   exhibition_id: string;
+  user_id: any;
   artwork_id: string;
   title: string;
   artist: string;
@@ -112,4 +113,19 @@ export const getExhibitionArtworks = async (
     throw new Error(`Error fetching artworks: ${error.message}`);
   }
   return data as ExhibitionArtwork[];
+};
+
+export const removeArtworkFromExhibition = async (
+  artworkId: string,
+  exhibitionId: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from("exhibition_artworks")
+    .delete()
+    .eq("artwork_id", artworkId)
+    .eq("exhibition_id", exhibitionId);
+
+  if (error) {
+    throw new Error(`Error removing artwork: ${error.message}`);
+  }
 };

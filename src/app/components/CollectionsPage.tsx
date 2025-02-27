@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/authContext";
 import {
   Box,
@@ -21,89 +21,96 @@ const CollectionsPage = () => {
   const [collections, setCollections] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const fetchCollections = async () => {
-    if (!user) return;
-    try {
-      const data = await getUserExhibitions(user.id);
-      setCollections(data);
-    } catch (err) {
-      setError("Failed to load collections.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteCollection = async (id: string) => {
-    try {
-      if (!user) return;
-      deleteUserExhibition(id);
-      const data = await getUserExhibitions(user.id);
-      setCollections(data);
-    } catch (err) {
-      setError("Failed to load collections.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
+    const fetchCollections = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const data = await getUserExhibitions(user.id);
+        setCollections(data);
+      } catch {
+        setError("Failed to load collections.");
+      } finally {
+        setLoading(false);
+        setHasFetched(true);
+      }
+    };
     fetchCollections();
   }, [user, collections]);
 
+  const deleteCollection = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteUserExhibition(id);
+      setCollections((prev) =>
+        prev.filter((collection) => collection.id !== id)
+      );
+    } catch {
+      setError("Failed to delete collection.");
+    }
+  };
+
   return (
-    <Box sx={{ p: 3, maxWidth: 800, margin: "auto" }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ p: 4, maxWidth: 900, margin: "auto", textAlign: "center" }}>
+      <Typography variant="h4" fontWeight={600} gutterBottom>
         Your Collections
       </Typography>
       {error && <Typography color="error">{error}</Typography>}
 
-      {/* Create New Collection Form */}
-      {loading && (
+      {loading && !hasFetched ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-          <CircularProgress />
+          <CircularProgress size={60} />
         </Box>
-      )}
-
-      {!loading && collections.length > 0 ? (
+      ) : collections.length > 0 ? (
         <Box
           sx={{
-            width: "100%",
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fill, minmax(min(200px, 100%), 1fr))",
-            gap: 2,
+            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+            gap: 3,
+            mt: 3,
           }}
         >
-          {collections.map((collection, index) => (
-            <Card key={index}>
-              <CardContent sx={{ height: "100%" }}>
-                <Typography variant="h5" component="div">
+          {collections.map((collection) => (
+            <Card key={collection.id} sx={{ boxShadow: 3, borderRadius: 2 }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600}>
                   {collection.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
                   {collection.description}
                 </Typography>
-                <Button href={`userDashboard/${collection.id}`}>View</Button>
                 <Button
-                  onClick={() => {
-                    deleteCollection(collection.id);
-                  }}
+                  href={`userDashboard/${collection.id}`}
+                  variant="contained"
+                  sx={{ mr: 1 }}
+                >
+                  View
+                </Button>
+                <Button
+                  onClick={() => deleteCollection(collection.id)}
+                  variant="outlined"
+                  color="error"
                 >
                   Delete
                 </Button>
               </CardContent>
             </Card>
           ))}
-          <FormDialog />
         </Box>
       ) : (
-        !loading && (
-          <>
-            <Typography>No collections found.</Typography> <FormDialog />
-          </>
-        )
+        <Typography sx={{ mt: 3, color: "text.secondary" }}>
+          No collections found.
+        </Typography>
       )}
+      <Box sx={{ mt: 4 }}>
+        <FormDialog />
+      </Box>
     </Box>
   );
 };

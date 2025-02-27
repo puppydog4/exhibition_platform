@@ -1,35 +1,41 @@
 "use client";
+
+import DateRangeSlider from "../components/DateRangeSlider";
 import fetchArtWorks from "@/utils/fetchArtworks";
 import {
   ToggleButton,
   ToggleButtonGroup,
+  Slider,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import {
   QueryClient,
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
 import { useState } from "react";
-import{ useRouter } from "next/navigation";
-import { Search, SearchIconWrapper, StyledInputBase } from "@/app/components/search";
-
-
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  SearchIconWrapper,
+  StyledInputBase,
+} from "@/app/components/search";
 
 const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    // Provide the client to your App
     <QueryClientProvider client={queryClient}>
-      <SearchCollection/>
+      <SearchCollection />
     </QueryClientProvider>
   );
 }
 
 function SearchCollection() {
-  const router = useRouter()
+  const router = useRouter();
   const { isLoading, isError, data, error } = useQuery({
     queryKey: [
       "https://collectionapi.metmuseum.org/public/collection/v1/departments",
@@ -37,89 +43,128 @@ function SearchCollection() {
     queryFn: fetchArtWorks,
   });
 
-  const [department, setDepartment] = useState<string | null>("");
+  const [dateRange, setDateRange] = useState<[number, number]>([1000, 2024]);
+  const [department, setDepartment] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [disableSlider, setDisableSlider] = useState(false);
 
   const handleDepartment = (
     event: React.MouseEvent<HTMLElement>,
     newDepartment: string | null
-  ) => {
+  ): void => {
     setDepartment(newDepartment);
+  };
+
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setSearchInput(event.target.value);
+  };
+
+  const handleDateRangeChange = (newValue: [number, number]): void => {
+    setDateRange(newValue);
   };
 
   const handleSearch = () => {
     if (department) {
-      // Redirect to the search page with query parameters
       router.push(
-        `/search?query=${encodeURIComponent(
+        `/SearchMet?query=${encodeURIComponent(
           searchInput
-        )}&department=${encodeURIComponent(department)}`
+        )}&department=${encodeURIComponent(department)}&dateBegin=${
+          dateRange[0]
+        }&dateEnd=${dateRange[1]}`
       );
     } else {
       console.log("No department selected");
-      // Optionally, display a message to the user here
     }
-  };
-  const [searchInput, setSearchInput] = useState("");
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(event.target.value);
   };
 
   if (isLoading) {
-    return <span>Loading...</span>;
+    return <Typography>Loading...</Typography>;
   }
 
   if (isError) {
-    return <span>Error: {error.message}</span>;
+    return <Typography color="error">Error: {error.message}</Typography>;
   }
 
   return (
-    <>
-      <Box>
-        <Search>
-          <SearchIconWrapper>
-            <SearchIcon />
-          </SearchIconWrapper>
-          <StyledInputBase
-            placeholder="Search…"
-            inputProps={{ "aria-label": "search" }}
-            value={searchInput}
-            onChange={handleInputChange}
-          />
-        </Search>
-        <ToggleButtonGroup
-          value={department}
-          exclusive
-          onChange={handleDepartment}
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            p: 1,
-            m: 1,
-            bgcolor: "background.paper",
-            maxWidth: 3000,
-            borderRadius: 1,
-          }}
-        >
-          {data.departments.map(
-            (department: { displayName: string; departmentId: number }) => {
-              return (
-                <ToggleButton
-                  key={department.departmentId}
-                  value={department.departmentId}
-                  sx={{ m: 1, p: 1 }}
-                >
-                  {department.displayName}
-                </ToggleButton>
-              );
-            }
-          )}
-        </ToggleButtonGroup>
+    <Box sx={{ maxWidth: 800, margin: "auto", textAlign: "center", p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Search the MET Collection
+      </Typography>
+      <Search>
+        <SearchIconWrapper>
+          <SearchIcon />
+        </SearchIconWrapper>
+        <StyledInputBase
+          placeholder="Search…"
+          inputProps={{ "aria-label": "search" }}
+          value={searchInput}
+          onChange={handleInputChange}
+        />
+      </Search>
+
+      <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+        Select Department
+      </Typography>
+      <ToggleButtonGroup
+        value={department}
+        exclusive
+        onChange={handleDepartment}
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: 1,
+        }}
+      >
+        {data.departments.map(
+          (department: { displayName: string; departmentId: number }) => (
+            <ToggleButton
+              key={department.departmentId}
+              value={department.departmentId}
+              sx={{ p: 1, textTransform: "none" }}
+            >
+              {department.displayName}
+            </ToggleButton>
+          )
+        )}
+      </ToggleButtonGroup>
+
+      <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+        Date Range
+      </Typography>
+      <Box sx={{ textAlign: "center", mt: 4 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={disableSlider}
+              onChange={(e) => {
+                setDisableSlider(e.target.checked);
+                setDateRange([-5000, 2024]);
+              }}
+            />
+          }
+          label="Disable Date Range"
+        />
+        <DateRangeSlider
+          dateRange={dateRange}
+          onChange={setDateRange}
+          disabled={disableSlider}
+        />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Selected Range: {dateRange[0]} - {dateRange[1]}
+        </Typography>
       </Box>
-      <Box>
-        <Button variant="contained" onClick={handleSearch}>Search</Button>
-      </Box>
-    </>
+
+      <Button
+        variant="contained"
+        onClick={handleSearch}
+        sx={{ mt: 3 }}
+        disabled={!department}
+      >
+        Search
+      </Button>
+    </Box>
   );
 }
