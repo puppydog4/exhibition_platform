@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   QueryClient,
@@ -32,7 +32,9 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SearchResultsPage />
+      <Suspense>
+        <SearchResultsPage />
+      </Suspense>
     </QueryClientProvider>
   );
 }

@@ -15,7 +15,7 @@ import {
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -28,7 +28,9 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SearchCollection />
+      <Suspense>
+        <SearchCollection />
+      </Suspense>
     </QueryClientProvider>
   );
 }
@@ -157,7 +159,7 @@ function SearchCollection() {
         variant="contained"
         onClick={handleSearch}
         sx={{ mt: 3 }}
-        disabled={!department}
+        disabled={!department || !searchInput}
       >
         Search
       </Button>

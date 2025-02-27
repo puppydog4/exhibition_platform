@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import {
   Box,
   Card,
@@ -29,7 +29,9 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SearchResultsPage />
+      <Suspense>
+        <SearchResultsPage />
+      </Suspense>
     </QueryClientProvider>
   );
 }
