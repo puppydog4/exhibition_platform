@@ -1,5 +1,7 @@
-import React from "react";
-import { Box, Button, Typography } from "@mui/material";
+import React, { useEffect } from "react";
+import { Box, Button, Typography, IconButton } from "@mui/material";
+import FirstPageIcon from "@mui/icons-material/FirstPage";
+import LastPageIcon from "@mui/icons-material/LastPage";
 
 interface PaginationProps {
   totalItems: number;
@@ -12,16 +14,39 @@ export const Pagination: React.FC<PaginationProps> = ({
   currentIndex,
   onPageChange,
 }) => {
+  // Enable keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft" && currentIndex > 0) {
+        onPageChange(currentIndex - 1);
+      }
+      if (event.key === "ArrowRight" && currentIndex < totalItems - 1) {
+        onPageChange(currentIndex + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentIndex, totalItems, onPageChange]);
+
   return (
     <Box
       sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        gap: 2,
+        gap: 1.5,
         mt: 3,
       }}
     >
+      <IconButton
+        color="primary"
+        disabled={currentIndex === 0}
+        onClick={() => onPageChange(0)}
+      >
+        <FirstPageIcon />
+      </IconButton>
+
       <Button
         variant="outlined"
         color="primary"
@@ -31,9 +56,11 @@ export const Pagination: React.FC<PaginationProps> = ({
       >
         Previous
       </Button>
+
       <Typography variant="body1" fontWeight={600}>
         {currentIndex + 1} / {totalItems}
       </Typography>
+
       <Button
         variant="outlined"
         color="primary"
@@ -43,6 +70,14 @@ export const Pagination: React.FC<PaginationProps> = ({
       >
         Next
       </Button>
+
+      <IconButton
+        color="primary"
+        disabled={currentIndex === totalItems - 1}
+        onClick={() => onPageChange(totalItems - 1)}
+      >
+        <LastPageIcon />
+      </IconButton>
     </Box>
   );
 };

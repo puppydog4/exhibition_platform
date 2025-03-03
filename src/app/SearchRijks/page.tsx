@@ -92,7 +92,7 @@ const SearchResultsPage: React.FC = () => {
       >
         <CardMedia
           component="img"
-          image={data[currentIndex].headerImage.url}
+          image={data[currentIndex].webImage.url}
           sx={{
             cursor: "pointer",
             transition: "0.3s",
@@ -115,9 +115,12 @@ const SearchResultsPage: React.FC = () => {
       <Dialog
         open={open}
         fullScreen
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-description"
+        onClose={() => setOpen(false)}
         sx={{
           "& .MuiDialog-paper": {
-            backgroundColor: "black",
+            backgroundColor: "#121212", // Improved contrast
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -127,6 +130,8 @@ const SearchResultsPage: React.FC = () => {
         <DialogContent sx={{ color: "white", textAlign: "center", p: 4 }}>
           <IconButton
             onClick={() => setOpen(false)}
+            aria-label="Close artwork preview"
+            autoFocus
             sx={{
               position: "absolute",
               top: 16,
@@ -139,7 +144,7 @@ const SearchResultsPage: React.FC = () => {
           </IconButton>
           <img
             src={data[currentIndex]?.webImage.url}
-            alt="Expanded View"
+            alt={data[currentIndex]?.longTitle || "Expanded artwork"}
             style={{
               maxWidth: "90%",
               maxHeight: "85vh",
@@ -147,11 +152,15 @@ const SearchResultsPage: React.FC = () => {
             }}
           />
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6" fontWeight={600}>
+            <Typography id="dialog-title" variant="h6" fontWeight={600}>
               {data[currentIndex]?.longTitle}
             </Typography>
-            <Typography variant="body2" fontStyle="italic">
-              {data[currentIndex].objectDate}
+            <Typography
+              id="dialog-description"
+              variant="body2"
+              fontStyle="italic"
+            >
+              {data[currentIndex]?.objectDate}
             </Typography>
           </Box>
         </DialogContent>

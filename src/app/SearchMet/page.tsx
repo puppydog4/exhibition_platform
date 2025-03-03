@@ -187,13 +187,15 @@ function SearchResultsPage() {
             <Typography sx={{ mt: 3 }}>No artwork data available.</Typography>
           )}
 
-          {/* Full-Screen Image Modal */}
           <Dialog
             open={open}
             fullScreen
+            aria-labelledby="dialog-title"
+            aria-describedby="dialog-description"
+            onClose={() => setOpen(false)}
             sx={{
               "& .MuiDialog-paper": {
-                backgroundColor: "black",
+                backgroundColor: "#121212", // Improved contrast
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -203,6 +205,7 @@ function SearchResultsPage() {
             <DialogContent sx={{ color: "white", textAlign: "center" }}>
               <IconButton
                 onClick={() => setOpen(false)}
+                aria-label="Close artwork preview"
                 sx={{
                   position: "absolute",
                   top: 16,
@@ -215,13 +218,17 @@ function SearchResultsPage() {
               </IconButton>
               <img
                 src={artworkData?.primaryImage}
-                alt="Expanded View"
+                alt="Expanded artwork view"
+                role="presentation"
                 style={{
                   maxWidth: "100%",
                   maxHeight: "100vh",
                   objectFit: "contain",
                 }}
               />
+              <Typography id="dialog-title" variant="h6">
+                {artworkData?.title}
+              </Typography>
             </DialogContent>
           </Dialog>
 

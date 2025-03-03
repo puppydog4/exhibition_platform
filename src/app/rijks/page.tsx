@@ -35,6 +35,7 @@ function SearchRijks() {
   const [sortBy, setSortBy] = useState("");
 
   const handleSearch = () => {
+    if (!searchInput.trim()) return;
     router.push(
       `/SearchRijks?query=${encodeURIComponent(
         searchInput
@@ -62,8 +63,9 @@ function SearchRijks() {
             <SearchIcon />
           </SearchIconWrapper>
           <StyledInputBase
-            placeholder="Search…"
-            inputProps={{ "aria-label": "search" }}
+            id="search-input"
+            placeholder="Search artworks"
+            inputProps={{ "aria-label": "Search artworks" }}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             fullWidth
@@ -73,19 +75,31 @@ function SearchRijks() {
 
       <Box display="flex" gap={2} width="100%" maxWidth={600}>
         <FormControl fullWidth>
-          <InputLabel>Century</InputLabel>
-          <Select value={century} onChange={(e) => setCentury(e.target.value)}>
-            {[...Array(22).keys()].map((c) => (
+          <InputLabel id="century-label">Century</InputLabel>
+          <Select
+            labelId="century-label"
+            value={century}
+            onChange={(e) => setCentury(e.target.value)}
+            aria-labelledby="century-label"
+          >
+            <MenuItem value="">All Centuries</MenuItem>
+            {Array.from({ length: 21 }, (_, i) => i + 1).map((c) => (
               <MenuItem key={c} value={c}>
-                {c === 0 ? "BC" : `${c}th Century`}
+                {c === 1 ? "1st Century" : `${c}th Century`}
               </MenuItem>
             ))}
+            <MenuItem value="BC">Before Christ (BC)</MenuItem>
           </Select>
         </FormControl>
 
         <FormControl fullWidth>
-          <InputLabel>Sort By</InputLabel>
-          <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <InputLabel id="sort-label">Sort By</InputLabel>
+          <Select
+            labelId="sort-label"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-labelledby="sort-label"
+          >
             <MenuItem value="chronological">Chronological</MenuItem>
             <MenuItem value="artist">Artist Name</MenuItem>
           </Select>
@@ -96,6 +110,8 @@ function SearchRijks() {
         variant="contained"
         color="secondary"
         onClick={handleSearch}
+        disabled={!searchInput.trim()}
+        aria-label="Search artwork"
         sx={{ mt: 2 }}
       >
         Search

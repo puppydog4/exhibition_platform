@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   QueryClient,
@@ -27,7 +27,7 @@ import {
   ExhibitionArtwork,
   getExhibitionArtworks,
   removeArtworkFromExhibition,
-} from "../../../utils/supabaseCollections"; // Adjust the import path as needed
+} from "../../../utils/supabaseCollections";
 
 const queryClient = new QueryClient();
 
@@ -44,69 +44,70 @@ function ViewCollectionPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  if (!collectionId) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6" color="error">
+          Invalid Collection ID.
+        </Typography>
+      </Box>
+    );
+  }
+
   const {
     data: artworks = [],
     isLoading,
     error,
   } = useQuery<ExhibitionArtwork[]>({
     queryKey: ["collectionArtworks", collectionId],
-    queryFn: async () => {
-      if (!collectionId) throw new Error("Invalid collection ID.");
-      return getExhibitionArtworks(collectionId);
-    },
-    enabled: Boolean(collectionId),
+    queryFn: () => getExhibitionArtworks(collectionId),
   });
 
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const totalArtworks = artworks.length;
-  const currentArtwork = artworks[currentIndex] ?? null;
+  const currentArtwork = artworks[currentIndex] || null;
 
-  // Prefetch adjacent artworks
-  useEffect(() => {
-    if (!artworks.length) return;
-
-    [1, 2, 3].forEach((offset) => {
-      const nextIndex = currentIndex + offset;
-      const prevIndex = currentIndex - offset;
-
-      if (nextIndex < totalArtworks) {
-        queryClient.prefetchQuery({
-          queryKey: ["collectionArtworks", collectionId, nextIndex],
-          queryFn: () => Promise.resolve(artworks[nextIndex]),
-        });
-      }
-
-      if (prevIndex >= 0) {
-        queryClient.prefetchQuery({
-          queryKey: ["collectionArtworks", collectionId, prevIndex],
-          queryFn: () => Promise.resolve(artworks[prevIndex]),
-        });
-      }
-    });
-  }, [currentIndex, artworks, collectionId, queryClient, totalArtworks]);
-
-  // Handle navigation
-  const goToNext = () =>
-    setCurrentIndex((prev) => Math.min(prev + 1, totalArtworks - 1));
-  const goToPrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
-
-  // Remove Artwork Mutation
+  // Remove Artwork Mutation with Optimistic Update
   const removeArtworkMutation = useMutation({
-    mutationFn: (artworkId: string) =>
-      removeArtworkFromExhibition(artworkId, collectionId!),
-    onSuccess: () => {
+    mutationFn: async (artworkId: string) => {
+      await removeArtworkFromExhibition(artworkId, collectionId);
+    },
+    onMutate: async (artworkId) => {
+      await queryClient.cancelQueries({
+        queryKey: ["collectionArtworks", collectionId],
+      });
+      const previousArtworks = queryClient.getQueryData<ExhibitionArtwork[]>([
+        "collectionArtworks",
+        collectionId,
+      ]);
+
+      queryClient.setQueryData(
+        ["collectionArtworks", collectionId],
+        (old: ExhibitionArtwork[] | undefined) =>
+          old ? old.filter((artwork) => artwork.artwork_id !== artworkId) : []
+      );
+
+      return { previousArtworks };
+    },
+    onError: (_err, _newData, context) => {
+      queryClient.setQueryData(
+        ["collectionArtworks", collectionId],
+        context?.previousArtworks
+      );
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["collectionArtworks", collectionId],
       });
-      setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0)); // Adjust index if needed
     },
   });
 
   const handleRemoveArtwork = () => {
     if (currentArtwork) {
       removeArtworkMutation.mutate(currentArtwork.artwork_id);
+      setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
     }
   };
 
@@ -190,18 +191,17 @@ function ViewCollectionPage() {
         <Typography sx={{ mt: 3 }}>No artworks in this collection.</Typography>
       )}
 
-      {/* Navigation */}
       {totalArtworks > 1 && (
         <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
           <Button
-            onClick={goToPrev}
+            onClick={() => setCurrentIndex((prev) => prev - 1)}
             disabled={currentIndex === 0}
             variant="outlined"
           >
             Previous
           </Button>
           <Button
-            onClick={goToNext}
+            onClick={() => setCurrentIndex((prev) => prev + 1)}
             disabled={currentIndex >= totalArtworks - 1}
             variant="contained"
           >
@@ -210,7 +210,6 @@ function ViewCollectionPage() {
         </Box>
       )}
 
-      {/* Full-Screen Image Modal */}
       <Dialog
         open={dialogOpen}
         fullScreen
@@ -249,10 +248,6 @@ function ViewCollectionPage() {
               margin: "auto",
             }}
           />
-          <Box sx={{ p: 2, textAlign: "center" }}>
-            <Typography variant="h6">{currentArtwork?.title}</Typography>
-            <Typography variant="body2">{currentArtwork?.artist}</Typography>
-          </Box>
         </DialogContent>
       </Dialog>
     </Container>

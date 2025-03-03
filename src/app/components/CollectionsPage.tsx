@@ -21,27 +21,36 @@ const CollectionsPage = () => {
   const [collections, setCollections] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCollections = async () => {
-      if (!user) return;
+    if (!user) return;
+
+    const fetchCollections = async (retryCount = 3) => {
       setLoading(true);
+      setError("");
+
       try {
         const data = await getUserExhibitions(user.id);
         setCollections(data);
-      } catch {
-        setError("Failed to load collections.");
+      } catch (err) {
+        if (retryCount > 0) {
+          setTimeout(() => fetchCollections(retryCount - 1), 2000); // Retry with delay
+        } else {
+          setError("Failed to load collections. Please try again later.");
+        }
       } finally {
         setLoading(false);
-        setHasFetched(true);
       }
     };
+
     fetchCollections();
-  }, [user, collections]);
+  }, [user]);
 
   const deleteCollection = async (id: string) => {
     if (!user) return;
+    setIsDeleting(id);
+
     try {
       await deleteUserExhibition(id);
       setCollections((prev) =>
@@ -49,6 +58,8 @@ const CollectionsPage = () => {
       );
     } catch {
       setError("Failed to delete collection.");
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -59,7 +70,7 @@ const CollectionsPage = () => {
       </Typography>
       {error && <Typography color="error">{error}</Typography>}
 
-      {loading && !hasFetched ? (
+      {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
           <CircularProgress size={60} />
         </Box>
@@ -89,6 +100,7 @@ const CollectionsPage = () => {
                   href={`userDashboard/${collection.id}`}
                   variant="contained"
                   sx={{ mr: 1 }}
+                  aria-label={`View collection: ${collection.title}`}
                 >
                   View
                 </Button>
@@ -96,8 +108,14 @@ const CollectionsPage = () => {
                   onClick={() => deleteCollection(collection.id)}
                   variant="outlined"
                   color="error"
+                  disabled={isDeleting === collection.id}
+                  aria-label={`Delete collection: ${collection.title}`}
                 >
-                  Delete
+                  {isDeleting === collection.id ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    "Delete"
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -108,6 +126,7 @@ const CollectionsPage = () => {
           No collections found.
         </Typography>
       )}
+
       <Box sx={{ mt: 4 }}>
         <FormDialog />
       </Box>

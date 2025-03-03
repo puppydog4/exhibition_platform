@@ -18,6 +18,15 @@ An intuitive platform for curating, managing, and exploring exhibitions using da
 - **Backend & Database:** Supabase(postgreSQL)
 - **UI Components:** Material UI
 
+## Hosted Version
+
+https://exhibition-platform-ten.vercel.app/
+
+you can access a test account by logging in with :
+
+email: test123@test.email
+passord: 123456
+
 ## 📦 Installation
 
 1. **Clone the repository:**
@@ -31,11 +40,15 @@ An intuitive platform for curating, managing, and exploring exhibitions using da
    ```
 3. **Set up environment variables:**
    Create a `.env.local` file and add:
+
    ```sh
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    NEXT_PUBLIC_RIJKS_API_KEY =your_rijks_museum_api_key
    ```
+
+   ps: you will have to set up your supabase db tables and policies to correctly work
+
 4. **Run the development server:**
    ```sh
    npm run dev

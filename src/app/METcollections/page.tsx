@@ -46,8 +46,9 @@ function SearchCollection() {
 
   const [dateRange, setDateRange] = useState<[number, number]>([1000, 2024]);
   const [department, setDepartment] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState<string>("sunflowers");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [disableSlider, setDisableSlider] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDepartment = (
     event: React.MouseEvent<HTMLElement>,
@@ -63,17 +64,18 @@ function SearchCollection() {
   };
 
   const handleSearch = () => {
-    if (department) {
-      router.push(
-        `/SearchMet?query=${encodeURIComponent(
-          searchInput
-        )}&department=${encodeURIComponent(department)}&dateBegin=${
-          dateRange[0]
-        }&dateEnd=${dateRange[1]}`
-      );
-    } else {
-      console.log("No department selected");
+    if (!department) {
+      setErrorMessage("Please select a department before searching.");
+      return;
     }
+    setErrorMessage(null);
+    router.push(
+      `/SearchMet?query=${encodeURIComponent(
+        searchInput
+      )}&department=${encodeURIComponent(department)}&dateBegin=${
+        dateRange[0]
+      }&dateEnd=${dateRange[1]}`
+    );
   };
 
   if (isLoading) {
@@ -89,26 +91,29 @@ function SearchCollection() {
       <Typography variant="h4" gutterBottom>
         Search the MET Collection
       </Typography>
+
       <Search>
         <SearchIconWrapper>
           <SearchIcon />
         </SearchIconWrapper>
         <StyledInputBase
-          placeholder="Search…"
-          inputProps={{ "aria-label": "search" }}
+          id="search-input"
+          placeholder="Search artworks"
+          inputProps={{ "aria-label": "Search artworks" }}
           value={searchInput}
           onChange={handleInputChange}
           required
         />
       </Search>
 
-      <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+      <Typography id="department-label" variant="h6" sx={{ mt: 3, mb: 1 }}>
         Select Department
       </Typography>
       <ToggleButtonGroup
         value={department}
         exclusive
         onChange={handleDepartment}
+        aria-labelledby="department-label"
         sx={{
           display: "flex",
           flexWrap: "wrap",
@@ -129,6 +134,12 @@ function SearchCollection() {
         )}
       </ToggleButtonGroup>
 
+      {errorMessage && (
+        <Typography color="error" sx={{ mt: 1 }}>
+          {errorMessage}
+        </Typography>
+      )}
+
       <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
         Date Range
       </Typography>
@@ -141,10 +152,16 @@ function SearchCollection() {
                 setDisableSlider(e.target.checked);
                 setDateRange([-5000, 2024]);
               }}
+              inputProps={{
+                "aria-describedby": "date-range-description",
+              }}
             />
           }
           label="Disable Date Range"
         />
+        <Typography id="date-range-description" variant="body2" sx={{ mb: 2 }}>
+          Unchecking allows you to filter by year.
+        </Typography>
         <DateRangeSlider
           dateRange={dateRange}
           onChange={setDateRange}
@@ -159,7 +176,8 @@ function SearchCollection() {
         variant="contained"
         onClick={handleSearch}
         sx={{ mt: 3 }}
-        disabled={!department || !searchInput}
+        disabled={!searchInput}
+        aria-label="Search the MET collection"
       >
         Search
       </Button>
