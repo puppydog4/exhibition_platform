@@ -33,7 +33,7 @@ const CollectionsPage = () => {
       try {
         const data = await getUserExhibitions(user.id);
         setCollections(data);
-      } catch (err) {
+      } catch (_) {
         if (retryCount > 0) {
           setTimeout(() => fetchCollections(retryCount - 1), 2000); // Retry with delay
         } else {
